@@ -1,4 +1,5 @@
 use chrono::{Local, TimeZone};
+use colored::Colorize;
 use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -52,7 +53,7 @@ fn gen_random_hex(length: usize) -> String {
     nanoid!(length, &hex)
 }
 
-fn input(message: &str) -> String {
+fn input(message: colored::ColoredString) -> String {
     print!("{}", message);
     stdout().flush().expect("Failed to flush stdout!");
     let mut tmp = String::new();
@@ -62,24 +63,46 @@ fn input(message: &str) -> String {
 
 fn read_todos() {
     let todos = open_json_file();
+
+    if todos.len() == 0 {
+        println!("Empty :(");
+        return;
+    }
+
+    println!(
+        "{}",
+        "==================== Ongoing Todos ====================".bold()
+    );
     for (index, todo) in todos.iter().enumerate() {
-        println!("{}. {}", index + 1, todo.id);
-        println!("Label: {}", todo.label);
-        println!("Content: {}", todo.content);
+        let padding_length = format!("{}. ", index + 1).len();
+        let padding = " ".repeat(padding_length);
+
+        println!("{}. {}", index + 1, todo.id.green().bold());
+        println!("{}{}", padding, todo.label.cyan().bold());
+        println!("{}{}", padding, todo.content.cyan());
         println!(
-            "Created at: {}",
+            "{}{}{}",
+            padding,
+            "Created: ",
             Local
                 .timestamp_opt(todo.created_timestamp, 0)
                 .unwrap()
                 .format("%H:%M %d/%m/%Y")
+                .to_string()
+                .yellow()
         );
         println!(
-            "Updated at: {}\n",
+            "{}{}{}",
+            padding,
+            "Updated: ",
             Local
                 .timestamp_opt(todo.updated_timestamp, 0)
                 .unwrap()
                 .format("%H:%M %d/%m/%Y")
+                .to_string()
+                .yellow()
         );
+        println!();
     }
 }
 
@@ -88,7 +111,11 @@ fn create_todo(label: &str, content: &str) {
     let mut todos = open_json_file();
     todos.push(todo);
     write_json_file(&todos);
-    println!("Successfully created new todo with ID: {}", id);
+    println!(
+        "{} {}",
+        "Successfully created new todo with ID:".green(),
+        id
+    );
 }
 
 fn update_todo(index: usize, label: &str, content: &str) -> bool {
@@ -119,41 +146,54 @@ fn delete_todo(index: usize) -> bool {
 }
 
 fn main() {
-    println!("Welcome to Todo CLI!");
-    println!("(C) 2024 XnonXte");
+    println!("{}", "Welcome to Todo CLI!".bright_white().on_blue().bold());
+    println!("{}", "(C) 2024 XnonXte".bright_white().on_blue().bold());
+    println!();
 
     loop {
-        let operation = input("Enter an operation ([C]reate, [R]ead, [U]pdate, [D]elete): ");
+        let operation = input("Enter an operation ([C]reate, [R]ead, [U]pdate, [D]elete): ".blue());
 
         match operation.to_lowercase().as_str() {
             "c" => {
-                let label = input("Label: ");
-                let content = input("Content: ");
+                let label = input("Label: ".blue());
+                let content = input("Content: ".blue());
                 create_todo(&label, &content)
             }
             "r" => {
                 read_todos();
             }
             "u" => {
-                let index: usize = input("Todo index (one-based index): ").parse().unwrap();
-                let label = input("Label: ");
-                let content = input("Content: ");
+                let index: usize = input("Todo index (one-based index): ".blue())
+                    .parse()
+                    .unwrap();
+                let label = input("Label: ".blue());
+                let content = input("Content: ".blue());
 
                 match update_todo(index - 1, &label, &content) {
-                    true => println!("Successfully updated todo on index: {}", index),
-                    false => println!("Index out of range!"),
+                    true => println!(
+                        "{} {}",
+                        "Successfully updated todo on index:".green(),
+                        index
+                    ),
+                    false => println!("{}", "Index out of range!".red()),
                 }
             }
             "d" => {
-                let index: usize = input("Todo index (one-based index): ").parse().unwrap();
+                let index: usize = input("Todo index (one-based index): ".blue())
+                    .parse()
+                    .unwrap();
 
                 match delete_todo(index - 1) {
-                    true => println!("Successfully deleted todo on index: {}", index),
-                    false => println!("Index out of range!"),
+                    true => println!(
+                        "{} {}",
+                        "Successfully deleted todo on index:".green(),
+                        index
+                    ),
+                    false => println!("{}", "Index out of range!".red()),
                 }
             }
             _ => {
-                println!("Not a valid operation! Please try again...");
+                println!("{}", "Not a valid operation! Please try again...".red());
                 continue;
             }
         }
