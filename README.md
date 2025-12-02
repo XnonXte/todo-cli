@@ -2,4 +2,4 @@
 
 ![Preview](image.png)
 
-This is a todo app on the terminal runs blazingly fast 🔥🔥🔥
+This is a todo app on the terminal which run blazingly fast 🔥🔥🔥
